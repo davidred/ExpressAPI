@@ -1,6 +1,7 @@
 const models = require ('../models')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
+const { check, validationResult } = require('express-validator')
 
 exports.get_user = function(req, res, next) {
   return models.User.findOne({
@@ -21,6 +22,11 @@ exports.get_users = function(req, res, next) {
 }
 
 exports.create_user = function(req, res, next) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() });
+  }
+
   bcrypt.hash(req.body.password, 10, function(err, hash) {
     return models.User.create({
       email: req.body.email,
@@ -36,7 +42,12 @@ exports.create_user = function(req, res, next) {
 
 // Generate JWT after successful login
 exports.login = function(req, res, next) {
-  const user = models.User.findOne({
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() });
+  }
+
+  models.User.findOne({
     where: {
       email: req.body.email
     }
@@ -55,4 +66,23 @@ exports.login = function(req, res, next) {
       })
     }
   })
+}
+
+exports.validate = (method) => {
+  switch (method) {
+    case 'create_user': {
+      return [
+        check('email').exists().isEmail(),
+        check('password').exists().isLength({ min: 8 }),
+        check('firstName').exists(),
+        check('lastName').exists(),
+      ]
+    }
+    case 'login': {
+      return [
+        check('email').exists(),
+        check('password').exists(),
+      ]
+    }
+  }
 }

@@ -9,9 +9,9 @@ router.get('/:user_id', users.get_user)
 router.get('/', users.get_users)
 
 /* POST users. */
-router.post('/', users.create_user)
+router.post('/', users.validate('create_user'), users.create_user)
 
 /* POST login */
-router.post('/login', users.login)
+router.post('/login', users.validate('login'), users.login)
 
 module.exports = router;
