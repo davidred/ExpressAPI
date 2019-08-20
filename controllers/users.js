@@ -1,4 +1,6 @@
 const models = require ('../models')
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt')
 
 exports.get_user = function(req, res, next) {
   return models.User.findOne({
@@ -19,14 +21,38 @@ exports.get_users = function(req, res, next) {
 }
 
 exports.create_user = function(req, res, next) {
-  console.log('request body: ', req.body)
-  // console.log('user email: ', req.body.email);
-  return models.User.create({
-    email: req.body.email,
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
+  bcrypt.hash(req.body.password, 10, function(err, hash) {
+    return models.User.create({
+      email: req.body.email,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      password: hash,
+    }).then(user => {
+      res.setHeader('Content-Type', 'application/json')
+      res.end(JSON.stringify(user))
+    })
+  })
+}
+
+// Generate JWT after successful login
+exports.login = function(req, res, next) {
+  const user = models.User.findOne({
+    where: {
+      email: req.body.email
+    }
   }).then(user => {
-    res.setHeader('Content-Type', 'application/json')
-    res.end(JSON.stringify(user))
+    if (user == null) {
+      res.status(401).send('Incorrect username and password combination')
+    } else {
+      bcrypt.compare(req.body.password, user.password, function(err, result) {
+        if (result) {
+          const token = jwt.sign({ foo: 'bar' }, process.env.SECRET);
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify(token))
+        } else {
+          res.status(401).send('Incorrect username and password combination')
+        }
+      })
+    }
   })
 }

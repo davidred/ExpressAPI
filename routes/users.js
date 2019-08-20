@@ -11,4 +11,7 @@ router.get('/', users.get_users)
 /* POST users. */
 router.post('/', users.create_user)
 
+/* POST login */
+router.post('/login', users.login)
+
 module.exports = router;
