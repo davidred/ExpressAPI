@@ -1,12 +1,14 @@
-var express = require('express');
-var router = express.Router();
-var users = require('../controllers/users')
+const express = require('express');
+const router = express.Router();
+const users = require('../controllers/users')
+const passport = require('passport')
+require('../passport')
 
 /* GET user */
-router.get('/:user_id', users.get_user)
+router.get('/:user_id', passport.authenticate('jwt', {session: false}), users.get_user)
 
 /* GET users. */
-router.get('/', users.get_users)
+router.get('/', passport.authenticate('jwt', {session: false}), users.get_users)
 
 /* POST users. */
 router.post('/', users.validate('create_user'), users.create_user)

@@ -57,9 +57,9 @@ exports.login = function(req, res, next) {
     } else {
       bcrypt.compare(req.body.password, user.password, function(err, result) {
         if (result) {
-          const token = jwt.sign({ foo: 'bar' }, process.env.SECRET);
+          const token = jwt.sign({ userId: user.id }, process.env.SECRET);
           res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify(token))
+          res.end(JSON.stringify({token: token}))
         } else {
           res.status(401).send('Incorrect username and password combination')
         }
